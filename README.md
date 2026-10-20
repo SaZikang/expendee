@@ -22,8 +22,8 @@ A modern, mobile-first expense calculation and personal finance dashboard web ap
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/SaZikang/expense-flow.git
-   cd expense-flow
+   git clone https://github.com/SaZikang/expendee.git
+   cd expendee
    ```
 
 2. Install dependencies:
