@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseFlow - Smart Mobile Expense Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-full flex flex-col font-sans transition-colors duration-200">
+
+    <!-- Mobile-Optimized Wrapper (acts like mobile app frame on desktop, full width on mobile) -->
+    <div class="w-full max-w-md mx-auto bg-white dark:bg-slate-900 min-h-screen flex flex-col shadow-2xl relative pb-24 border-x border-slate-200 dark:border-slate-800">
+
+        <!-- Top Header -->
+        <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md flex items-center justify-center">
+                    <i class="fa-solid fa-wallet text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">ExpenseFlow</h1>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Smart Financial Assistant</p>
+                </div>
+            </div>
+
+            <!-- Dark / Light Theme Toggle -->
+            <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Toggle Theme">
+                <i id="themeToggleDarkIcon" class="fa-solid fa-moon text-sm hidden dark:inline"></i>
+                <i id="themeToggleLightIcon" class="fa-solid fa-sun text-sm inline dark:hidden"></i>
+            </button>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="px-4 pt-3 space-y-2 z-40">
+                    {% for category, message in messages %}
+                        <div class="p-3 rounded-xl text-xs font-medium shadow-sm flex items-center justify-between
+                            {% if category == 'error' %} bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800
+                            {% elif category == 'success' %} bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800
+                            {% else %} bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 {% endif %}">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid {% if category == 'error' %}fa-circle-exclamation{% elif category == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Main Content Area -->
+        <main class="flex-grow p-4 space-y-6">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Bottom Navigation Bar (Mobile Tab Bar) -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 py-2.5 px-6 flex justify-around items-center z-40 shadow-lg">
+            <a href="{{ url_for('home') }}" class="flex flex-col items-center space-y-1 transition-colors {% if active_tab == 'home' %}text-brand-600 dark:text-brand-500 font-bold{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium{% endif %}">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] tracking-wide">Home</span>
+            </a>
+
+            <a href="{{ url_for('overview') }}" class="flex flex-col items-center space-y-1 transition-colors {% if active_tab == 'overview' %}text-brand-600 dark:text-brand-500 font-bold{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium{% endif %}">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+                <span class="text-[10px] tracking-wide">Overview</span>
+            </a>
+
+            <a href="{{ url_for('budget') }}" class="flex flex-col items-center space-y-1 transition-colors {% if active_tab == 'budget' %}text-brand-600 dark:text-brand-500 font-bold{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium{% endif %}">
+                <i class="fa-solid fa-bullseye text-lg"></i>
+                <span class="text-[10px] tracking-wide">Budget</span>
+            </a>
+        </nav>
+
+    </div>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            }
+        }
+    </script>
+</body>
+</html>

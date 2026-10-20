@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Period Selector Header -->
+<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+    <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-bullseye text-brand-600 dark:text-brand-500 text-sm"></i>
+        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Budget Period</span>
+    </div>
+    <form method="GET" action="{{ url_for('budget') }}">
+        <input type="month" name="month" value="{{ selected_month }}"
+               class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs rounded-xl px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 outline-none shadow-sm font-medium"
+               onchange="this.form.submit()">
+    </form>
+</div>
+
+<!-- Overall Budget Card & Progress -->
+<div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700/60">
+        <div class="flex items-center space-x-2.5">
+            <div class="bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 p-2 rounded-xl">
+                <i class="fa-solid fa-wallet text-sm"></i>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Overall Monthly Budget</h3>
+                <p class="text-[10px] text-slate-400">Target for {{ selected_month }}</p>
+            </div>
+        </div>
+        <span class="text-lg font-extrabold text-purple-600 dark:text-purple-400">
+            {% if overall_budget > 0 %}${{ "%.2f"|format(overall_budget) }}{% else %}Not Set{% endif %}
+        </span>
+    </div>
+
+    {% if overall_budget > 0 %}
+        {% set pct = (month_expense / overall_budget * 100) %}
+        <div class="space-y-1.5">
+            <div class="flex justify-between text-xs font-semibold">
+                <span class="text-slate-600 dark:text-slate-400">Spent: ${{ "%.2f"|format(month_expense) }}</span>
+                <span class="{% if pct > 100 %}text-rose-600 font-bold{% else %}text-slate-700 dark:text-slate-300{% endif %}">{{ "%.1f"|format(pct) }}%</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div class="h-2.5 rounded-full {% if pct > 100 %}bg-rose-500{% elif pct > 80 %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ [pct, 100]|min }}%"></div>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-xs text-slate-400 text-center py-2">Set an overall budget below to track your monthly spending limit.</p>
+    {% endif %}
+</div>
+
+<!-- Set Budget Form Card -->
+<div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-4">
+    <div class="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-700/60">
+        <div class="bg-blue-50 dark:bg-blue-950/50 text-brand-600 dark:text-brand-400 p-2 rounded-xl">
+            <i class="fa-solid fa-sliders text-sm"></i>
+        </div>
+        <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Set Budget</h3>
+    </div>
+
+    <form action="{{ url_for('set_budget') }}" method="POST" class="space-y-4">
+        <input type="hidden" name="month" value="{{ selected_month }}">
+
+        <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Budget Type</label>
+            <select name="budget_type" id="budgetType" onchange="toggleCategorySelect()"
+                    class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 text-xs focus:ring-2 focus:ring-brand-500 outline-none">
+                <option value="overall">Overall Monthly Budget</option>
+                <option value="category">Category-Specific Budget</option>
+            </select>
+        </div>
+
+        <div id="categorySelectDiv" class="hidden">
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Select Category</label>
+            <select name="category_id"
+                    class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 text-xs focus:ring-2 focus:ring-brand-500 outline-none">
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Budget Amount ($)</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-medium text-sm">$</span>
+                <input type="number" step="0.01" name="amount" required placeholder="500.00"
+                       class="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+            </div>
+        </div>
+
+        <button type="submit"
+                class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 px-4 rounded-2xl shadow-md transition-all text-xs flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Budget</span>
+        </button>
+    </form>
+</div>
+
+<!-- Category Budgets Progress Section -->
+<div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700/60">
+        <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+            <i class="fa-solid fa-tags text-brand-600 dark:text-brand-500"></i>
+            <span>Category Budgets & Spending</span>
+        </h3>
+        <span class="text-[10px] text-slate-400">{{ selected_month }}</span>
+    </div>
+
+    <div class="space-y-4">
+        {% for cat in categories %}
+            {% set b_amt = category_budgets.get(cat.id, 0) %}
+            {% set s_amt = cat_spending.get(cat.id, 0) %}
+            {% set cat_pct = (s_amt / b_amt * 100) if b_amt > 0 else 0 %}
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/60 dark:border-slate-700/50 space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs shadow-sm" style="background-color: {{ cat.color }};">
+                            <i class="fa-solid {{ cat.icon }}"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-800 dark:text-white">{{ cat.name }}</h4>
+                            <p class="text-[10px] text-slate-400">Budget: {% if b_amt > 0 %}${{ "%.2f"|format(b_amt) }}{% else %}Not set{% endif %}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-slate-800 dark:text-white">${{ "%.2f"|format(s_amt) }}</span>
+                </div>
+
+                {% if b_amt > 0 %}
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                            <span>Progress</span>
+                            <span class="{% if cat_pct > 100 %}text-rose-600 font-bold{% endif %}">{{ "%.1f"|format(cat_pct) }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                            <div class="h-1.5 rounded-full {% if cat_pct > 100 %}bg-rose-500{% elif cat_pct > 80 %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ [cat_pct, 100]|min }}%"></div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function toggleCategorySelect() {
+        const type = document.getElementById('budgetType').value;
+        const div = document.getElementById('categorySelectDiv');
+        if (type === 'category') {
+            div.classList.remove('hidden');
+        } else {
+            div.classList.add('hidden');
+        }
+    }
+</script>
+
+{% endblock %}
