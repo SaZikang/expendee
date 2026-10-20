@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 {% block content %}
 
 <!-- Period Selector Header -->
@@ -14,46 +15,59 @@
     </form>
 </div>
 
-<!-- Cash Flow Summary Card (Home includes total income and expenses) -->
-<div class="bg-gradient-to-br from-brand-600 to-brand-700 rounded-3xl p-5 text-white shadow-lg space-y-4 relative overflow-hidden">
-    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
-
-    <div class="flex justify-between items-start">
-        <div>
-            <p class="text-xs font-medium text-blue-100 uppercase tracking-wider">Net Balance</p>
-            <h2 class="text-3xl font-extrabold mt-0.5 tracking-tight">${{ "%.2f"|format(net_balance) }}</h2>
-        </div>
-        <div class="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center space-x-1">
-            <i class="fa-solid fa-shield-halved text-emerald-300"></i>
-            <span>Active</span>
+<!-- Home Page Cash Flow Chart (Total Income vs Total Expenses for this month) -->
+<div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-4">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div class="bg-blue-50 dark:bg-blue-950/50 text-brand-600 dark:text-brand-400 p-2 rounded-xl">
+                <i class="fa-solid fa-chart-column text-sm"></i>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Monthly Cash Flow</h3>
+                <p class="text-[10px] text-slate-400">Income vs Expenses ({{ selected_month }})</p>
+            </div>
         </div>
     </div>
 
-    <!-- Income & Expense Summary Breakdown -->
-    <div class="grid grid-cols-2 gap-3 pt-3 border-t border-white/20">
-        <div class="bg-white/10 backdrop-blur-sm p-3 rounded-2xl">
-            <div class="flex items-center space-x-1.5 text-emerald-300 text-xs font-semibold mb-1">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>Total Income</span>
+    <!-- Mini Chart / Comparison Bars -->
+    <div class="space-y-3 pt-2">
+        {% set max_val = [month_income, month_expense]|max if [month_income, month_expense]|max > 0 else 1 %}
+        {% set income_pct = (month_income / max_val * 100) %}
+        {% set expense_pct = (month_expense / max_val * 100) %}
+
+        <!-- Income Bar -->
+        <div class="space-y-1">
+            <div class="flex justify-between text-xs font-semibold">
+                <span class="text-emerald-600 dark:text-emerald-400 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <span>Total Income</span>
+                </span>
+                <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">${{ "%.2f"|format(month_income) }}</span>
             </div>
-            <p class="text-lg font-bold">${{ "%.2f"|format(total_income) }}</p>
-            <p class="text-[10px] text-blue-100 mt-0.5">Month: ${{ "%.2f"|format(month_income) }}</p>
+            <div class="w-full bg-slate-100 dark:bg-slate-700/60 rounded-full h-3 overflow-hidden">
+                <div class="h-3 rounded-full bg-emerald-500 transition-all duration-500" style="width: {{ income_pct }}%"></div>
+            </div>
         </div>
 
-        <div class="bg-white/10 backdrop-blur-sm p-3 rounded-2xl">
-            <div class="flex items-center space-x-1.5 text-rose-300 text-xs font-semibold mb-1">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>Total Expenses</span>
+        <!-- Expense Bar -->
+        <div class="space-y-1">
+            <div class="flex justify-between text-xs font-semibold">
+                <span class="text-rose-600 dark:text-rose-400 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrow-trend-down"></i>
+                    <span>Total Expenses</span>
+                </span>
+                <span class="text-rose-600 dark:text-rose-400 font-extrabold">${{ "%.2f"|format(month_expense) }}</span>
             </div>
-            <p class="text-lg font-bold">${{ "%.2f"|format(total_expense) }}</p>
-            <p class="text-[10px] text-blue-100 mt-0.5">Month: ${{ "%.2f"|format(month_expense) }}</p>
+            <div class="w-full bg-slate-100 dark:bg-slate-700/60 rounded-full h-3 overflow-hidden">
+                <div class="h-3 rounded-full bg-rose-500 transition-all duration-500" style="width: {{ expense_pct }}%"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Quick Action Expandable Cards (Add Income / Add Category) -->
 <div class="grid grid-cols-2 gap-3">
-    <button onclick="toggleModal('incomeModal')" class="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800/80 p-3 rounded-2xl text-left transition-all flex items-center space-x-3 group">
+    <button onclick="toggleModal('incomeModal')" class="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800/80 p-3.5 rounded-2xl text-left transition-all flex items-center space-x-3 group">
         <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
             <i class="fa-solid fa-money-bill-wave text-sm"></i>
         </div>
@@ -63,7 +77,7 @@
         </div>
     </button>
 
-    <button onclick="toggleModal('categoryModal')" class="bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/80 p-3 rounded-2xl text-left transition-all flex items-center space-x-3 group">
+    <button onclick="toggleModal('categoryModal')" class="bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/80 p-3.5 rounded-2xl text-left transition-all flex items-center space-x-3 group">
         <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
             <i class="fa-solid fa-tag text-sm"></i>
         </div>
@@ -113,67 +127,110 @@
             <div class="text-center py-10 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400">
                 <i class="fa-solid fa-receipt text-3xl mb-2 opacity-40"></i>
                 <p class="text-xs">No expenses recorded yet.</p>
-                <p class="text-[10px] text-slate-400 mt-1">Tap the '+' button below to add one!</p>
+                <p class="text-[10px] text-slate-400 mt-1">Tap the '+' shortcut below to add one!</p>
             </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- Floating Action Button (FAB) at Bottom Right for Quick Add Expense -->
-<button onclick="toggleModal('expenseModal')"
-        class="fixed right-5 bottom-20 w-14 h-14 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-full shadow-2xl flex items-center justify-center text-xl z-50 transition-all">
-    <i class="fa-solid fa-plus"></i>
-</button>
+<!-- Floating Action Button (FAB) at Bottom Right with Reminder Badge -->
+<div class="fixed right-5 bottom-20 z-50 flex items-center space-x-2">
+    <!-- Reminder Badge -->
+    <div class="bg-slate-900/90 dark:bg-slate-800 text-white text-[10px] font-semibold px-3 py-1.5 rounded-xl shadow-lg backdrop-blur-md animate-bounce">
+        💡 Shortcut: Add Expense
+    </div>
+    <button onclick="toggleModal('expenseModal')"
+            class="w-14 h-14 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-full shadow-2xl flex items-center justify-center text-xl transition-all">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+</div>
 
-<!-- Add Expense Modal -->
-<div id="expenseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in slide-in-from-bottom duration-200">
+<!-- Add Expense Modal (Refined: Larger, 3 Direct Category Boxes, Custom Keypad) -->
+<div id="expenseModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[92vh] overflow-y-auto animate-in fade-in slide-in-from-bottom duration-200">
+
+        <!-- Modal Header -->
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center space-x-2">
-                <div class="bg-blue-50 dark:bg-blue-950/50 text-brand-600 dark:text-brand-400 p-2 rounded-xl">
-                    <i class="fa-solid fa-plus-circle text-base"></i>
+            <div class="flex items-center space-x-2.5">
+                <div class="bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 p-2.5 rounded-2xl">
+                    <i class="fa-solid fa-plus-circle text-lg"></i>
                 </div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Add New Expense</h3>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Add New Expense</h3>
+                    <p class="text-[11px] text-slate-400">Select category & enter amount</p>
+                </div>
             </div>
-            <button onclick="toggleModal('expenseModal')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">&times;</button>
+            <button onclick="toggleModal('expenseModal')" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 text-base">&times;</button>
         </div>
 
-        <form action="{{ url_for('add_expense') }}" method="POST" class="space-y-4">
+        <form action="{{ url_for('add_expense') }}" method="POST" class="space-y-5" id="expenseForm">
             <input type="hidden" name="redirect_to" value="home">
+            <input type="hidden" name="category_id" id="selectedCategoryId" required>
+
+            <!-- 1. 3 Direct Category Boxes (Food, Entertainment, Transport + others if available) -->
             <div>
-                <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Amount ($)</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-medium text-sm">$</span>
-                    <input type="number" step="0.01" name="amount" required placeholder="0.00"
-                           class="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">1. Select Category</label>
+                <div class="grid grid-cols-3 gap-3">
+                    {% set icon_map = {'Food & Dining': 'fa-utensils', 'Entertainment': 'fa-film', 'Transportation': 'fa-car'} %}
+                    {% for cat in categories %}
+                        {% if cat.name in ['Food & Dining', 'Entertainment', 'Transportation', 'Food', 'Transport'] %}
+                        <div onclick="selectCategory({{ cat.id }}, this)"
+                             class="category-card cursor-pointer bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 p-3 rounded-2xl flex flex-col items-center justify-center text-center transition-all space-y-1.5 group">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm shadow-sm" style="background-color: {{ cat.color }};">
+                                <i class="fa-solid {{ cat.icon }}"></i>
+                            </div>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-full">{{ cat.name }}</span>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Category</label>
-                <select name="category_id" required
-                        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    <option value="" disabled selected>Select category</option>
-                    {% for cat in categories %}
-                        <option value="{{ cat.id }}">{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
+            <!-- 2. Amount Display & Custom Numeric Keypad -->
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">2. Enter Amount ($)</label>
+                <div class="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-300 dark:border-slate-700 flex items-center justify-between">
+                    <span class="text-2xl font-extrabold text-brand-600 dark:text-brand-400">$</span>
+                    <input type="text" id="amountDisplay" name="amount" readonly required placeholder="0.00"
+                           class="w-full bg-transparent text-right text-3xl font-black text-slate-900 dark:text-white outline-none font-mono">
+                </div>
+
+                <!-- Custom Keypad -->
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                    <button type="button" onclick="keypadPress('1')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">1</button>
+                    <button type="button" onclick="keypadPress('2')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">2</button>
+                    <button type="button" onclick="keypadPress('3')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">3</button>
+                    <button type="button" onclick="keypadPress('4')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">4</button>
+                    <button type="button" onclick="keypadPress('5')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">5</button>
+                    <button type="button" onclick="keypadPress('6')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">6</button>
+                    <button type="button" onclick="keypadPress('7')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">7</button>
+                    <button type="button" onclick="keypadPress('8')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">8</button>
+                    <button type="button" onclick="keypadPress('9')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">9</button>
+                    <button type="button" onclick="keypadPress('.')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">.</button>
+                    <button type="button" onclick="keypadPress('0')" class="py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 shadow-sm active:scale-95 transition-all">0</button>
+                    <button type="button" onclick="keypadBackspace()" class="py-3 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-xl text-lg font-bold text-rose-600 dark:text-rose-400 shadow-sm active:scale-95 transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-delete-left"></i>
+                    </button>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Remark (Optional)</label>
-                <input type="text" name="remark" placeholder="e.g., Lunch with colleagues"
-                       class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+            <!-- 3. Remark & Date -->
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">3. Remark (Optional)</label>
+                    <input type="text" name="remark" placeholder="e.g., Lunch at McDonald's"
+                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Date</label>
+                    <input type="date" name="date" value="{{ today }}" required
+                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
             </div>
 
-            <div>
-                <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
-                <input type="date" name="date" value="{{ today }}" required
-                       class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-            </div>
-
+            <!-- Submit Button -->
             <button type="submit"
-                    class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 px-4 rounded-2xl shadow-md transition-all text-xs flex items-center justify-center space-x-2">
+                    class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-all text-sm flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-check"></i>
                 <span>Save Expense</span>
             </button>
@@ -182,8 +239,8 @@
 </div>
 
 <!-- Add Income Modal -->
-<div id="incomeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+<div id="incomeModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center space-x-2">
                 <div class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 p-2 rounded-xl">
@@ -226,7 +283,7 @@
 </div>
 
 <!-- Add Category Modal -->
-<div id="categoryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+<div id="categoryModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center space-x-2">
@@ -279,6 +336,7 @@
     </div>
 </div>
 
+<!-- JavaScript for Keypad & Category Selection -->
 <script>
     function toggleModal(modalId) {
         const modal = document.getElementById(modalId);
@@ -288,6 +346,37 @@
             modal.classList.add('hidden');
         }
     }
+
+    function selectCategory(catId, element) {
+        // Remove active class from all category cards
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.classList.remove('border-brand-600', 'bg-brand-50', 'dark:bg-brand-950/40', 'ring-2', 'ring-brand-500');
+        });
+        // Add active style to selected card
+        element.classList.add('border-brand-600', 'bg-brand-50', 'dark:bg-brand-950/40', 'ring-2', 'ring-brand-500');
+        document.getElementById('selectedCategoryId').value = catId;
+    }
+
+    let currentAmount = "";
+    function keypadPress(val) {
+        if (val === '.' && currentAmount.includes('.')) return;
+        if (currentAmount.length >= 8) return;
+        currentAmount += val;
+        document.getElementById('amountDisplay').value = currentAmount;
+    }
+
+    function keypadBackspace() {
+        currentAmount = currentAmount.slice(0, -1);
+        document.getElementById('amountDisplay').value = currentAmount;
+    }
+
+    // Auto-select first category on load if available
+    window.addEventListener('DOMContentLoaded', () => {
+        const firstCard = document.querySelector('.category-card');
+        if (firstCard) {
+            firstCard.click();
+        }
+    });
 </script>
 
 {% endblock %}
