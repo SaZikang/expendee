@@ -1,4 +1,4 @@
-# ExpenseFlow 💸
+# Expendee 💸
 
 A modern, mobile-first expense calculation and personal finance dashboard web application built with Python (Flask), SQLite, Tailwind CSS, Chart.js, and FontAwesome.
 
